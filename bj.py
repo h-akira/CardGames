@@ -84,9 +84,9 @@ def float_inf(text):
     except:
       pass
 
-def view(deck,player,dealer,hole,tip=None,bet=None):
+def view(deck,player,dealer,hole,tip=0,bet=0):
   os.system('clear')
-  if tip != None and bet != None:
+  if tip or bet:
     print('所持チップ: {}  ベット: {}'.format(tip,bet))
   print('='*35)
   print('山札の残り枚数: {}'.format(str(len(deck))))
@@ -97,7 +97,7 @@ def view(deck,player,dealer,hole,tip=None,bet=None):
     print('ディーラーの手札: {} ({})'.format(hand2str(dealer,hole=hole),str(hand2point(dealer))))
   print('='*35)
 
-def bj(tip=None,bet=None):
+def bj(tip=0,bet=0):
   deck = gen_deck()
   player = []
   dealer = []
@@ -160,7 +160,10 @@ def main():
       pass
   while True:
     bet = float_inf('ベット: ')
-    if bet > tip:
+    if bet <= 0:
+      print('ベット額は0より大きくしてください．')
+      continue
+    elif bet > tip:
       print('あなたが現在所持しているチップは{}です．'.format(tip))
       print('所持している額より大きな額をベットすることはできません．')
       continue
@@ -171,7 +174,8 @@ def main():
       print('ベットすることができなくなったため終了します．')
       break
     if not yn_inf('継続しますか？'):
-      break
+      if yn_inf('本当に終了しますか？'):
+        break
 
 if(__name__ == '__main__'):
   main()
