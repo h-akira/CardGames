@@ -32,8 +32,20 @@ def code2mark(code):
   mark = ['♠','♣','♥','◆']
   return mark[code//13]
 
+def num2str(num):
+  if not 1 <= int(num) <= 13:
+    raise ValueError("'num' must be in the range 1-13")
+  if num == 11:
+    return 'J'
+  elif num == 12:
+    return 'Q'
+  elif num == 13:
+    return 'K'
+  else:
+    return str(int(num))
+
 def code2card(code):
-  return code2mark(code)+str(code2num(code))
+  return code2mark(code)+num2str(code2num(code))
 
 def hand2point(hand):
   point = 0
@@ -83,6 +95,14 @@ def float_inf(text):
       return float(input(text))
     except:
       pass
+
+def num2pmstr(num):
+  if num == 0:
+    return '±0.0'
+  elif num > 0:
+    return '+'+str(num)
+  else:
+    return str(num)
 
 def view(deck,player,dealer,hole,tip=0,bet=0):
   os.system('clear')
@@ -149,33 +169,46 @@ def bj(tip=0,bet=0):
     return tip + bet
 
 def main():
-  if not yn_inf('ブラックジャックを開始しますか？'):
+  if not yn_inf('プログラムを開始しますか？'):
     sys.exit()
+  game = 0
   os.system('clear')
   while True:
     try:
-      tip = float(input('チップの初期値: '))
+      tip_initial = float(input('チップの初期値: '))
+      tip = tip_initial
       break
-    except:
+    except ValueError:
       pass
-  while True:
-    bet = float_inf('ベット: ')
-    if bet <= 0:
-      print('ベット額は0より大きくしてください．')
-      continue
-    elif bet > tip:
-      print('あなたが現在所持しているチップは{}です．'.format(tip))
-      print('所持している額より大きな額をベットすることはできません．')
-      continue
-    tip -= bet
-    tip = bj(tip,bet)
-    print('あなたが所持するチップは{}になりました．'.format(tip))
-    if tip == 0:
-      print('ベットすることができなくなったため終了します．')
-      break
-    if not yn_inf('継続しますか？'):
-      if yn_inf('本当に終了しますか？'):
+  try:
+    while True:
+      bet = float_inf('ベット: ')
+      if bet <= 0:
+        print('ベット額は0より大きくしてください．')
+        continue
+      elif bet > tip:
+        print('あなたが現在所持しているチップは{}です．'.format(tip))
+        print('所持している額より大きな額をベットすることはできません．')
+        continue
+      tip = bj(tip-bet,bet)
+      print('あなたが所持するチップは{}になりました．'.format(tip))
+      game += 1
+      if tip == 0:
+        print('ベットすることができなくなったため終了します．')
         break
+      if not yn_inf('継続しますか？'):
+        if yn_inf('本当に終了しますか？'):
+          break
+  except KeyboardInterrupt:
+    print('\n中断されました．ゲームが未決着の場合，ベットされていたチップは返却されます．') 
+  result = """\
+【結果】
+プレイ回数　　: {}
+チップの初期値: {}
+チップの最終値: {}
+収支　　　　　: {}""".format(str(game),str(tip_initial),str(tip),num2pmstr(tip-tip_initial))
+  print('\n'+'='*35+'\n'+'='*35)
+  print(result)
 
 if(__name__ == '__main__'):
   main()
