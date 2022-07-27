@@ -90,6 +90,7 @@ class Baccarat_Predict:
   def __init__(self):
     while True:
       print("""\
+【選択肢】
 1: {}(1.95倍)
 2: {}(2倍)
 3: {}(9倍)\
@@ -109,10 +110,14 @@ def yn_inf(text,sep=' '):
     elif ans == 'n':
       return False
 
-def clear_print_head(player_money,predict=None):
+def clear_print_head(player_money,predict=None,game_counter_add=True):
   os.system('clear')
   print('='*35)
-  print('【{}ゲーム目】'.format(str(player_money.game_counter+1)))
+  if game_counter_add:
+    game_counter = player_money.game_counter + 1
+  else:
+    game_counter = player_money.game_counter
+  print('【{}ゲーム目】'.format(str(game_counter)))
   print('所持チップ: {}  ベット: {}'.format(player_money.own_tip,player_money.bet_tip))
   if predict!=None:
     print('あなたの予想: {}'.format(predict.value))
@@ -156,10 +161,11 @@ def baccarat(player_money,check_draw=True):
   
   # ゲームスタート
   deck = Deck()
-  if check_draw:
-    input('カードを配ります．(enter)')
   player = Baccarat_Hand('プレイヤー')
   banker = Baccarat_Hand('バンカー')
+  view(deck,player,banker,player_money,predict)
+  if check_draw:
+    input('カードを配ります．(enter)')
   player.draw(deck)
   player.draw(deck)
   banker.draw(deck)
@@ -204,9 +210,9 @@ def baccarat(player_money,check_draw=True):
     result_key = 3
 
   # チップの処理
-  hit_text = 'あなたの予想は当たったため，チップは{}倍になって返却され，'
+  hit_text = 'あなたの予想は当たったため，ベットしていたチップは{}倍になって返却されます．'
   if predict.key!=result_key:
-    print('あなたの予想は外れたためチップは没収され，')
+    print('あなたの予想は外れたため，ベットしていたチップは没収されます．')
     player_money.dividend() 
   elif result_key == 1:
     print(hit_text.format('1.95'))
@@ -240,11 +246,11 @@ def main():
     try:
       baccarat(player_money,options.check_draw)
     except KeyboardInterrupt:
-      print('中断されました．ベットされたチップは返却されます．')
+      input('中断されました．ベットされたチップは返却されます．(enter)')
       player_money.dividend(ratio=1,counter_add=False)
       break
     if player_money.own_tip == 0:
-      print('ベットすることができなくなったため終了します．')
+      input('ベットすることができなくなったため終了します．(enter)')
       break
     if not yn_inf('継続しますか？'):
       if yn_inf('本当に終了しますか？'):
