@@ -42,7 +42,7 @@ class Card:
   mark_list = ['♠','♣','♥','◆']
   def __init__(self,code):
     if not 0<=code<= 51:
-      raise ValueError("'code' must be in the range 0-51")
+      raise ValueRangeError("'code' must be in the range 0-51")
     self.code = code
     self.num = code%13+1
     self.mark = __class__.mark_list[code//13]
