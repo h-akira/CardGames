@@ -26,7 +26,7 @@ class Deck:
 
 class Hand:
   def __init__(self,name=None):
-    self.name=name
+    self.name = name
     self.cards = []
     self.num = 0
   def draw(self,deck,i=0):
@@ -117,7 +117,7 @@ class Baccarat_Money(Money):
     # チップの処理
     hit_text = '{}の予想は当たったため，'.format(self.name)+'ベットしていたチップは{}倍になって返却されます．'
     if self.predict_key!=result_key:
-      print('あなたの予想は外れたため，ベットしていたチップは没収されます．')
+      print('{}の予想は外れたため，ベットしていたチップは没収されます．'.format(self.name))
       self.dividend() 
     elif result_key == 1:
       print(hit_text.format('1.95'))
@@ -140,72 +140,97 @@ def yn_inf(text,sep=' '):
     elif ans == 'n':
       return False
 
-def clear_print_head(player_money,game_counter_add=True):
+def clear_print_head(players_money,game_counter_add=True):
   os.system('clear')
-  print('='*35)
+  print('='*70)
   if game_counter_add:
-    game_counter = player_money.game_counter + 1
+    game_counter = players_money[0].game_counter + 1
   else:
-    game_counter = player_money.game_counter
+    game_counter = players_money[0].game_counter
   print('【{}ゲーム目】'.format(str(game_counter)))
-  print('所持チップ: {}  ベット: {}'.format(player_money.own_tip,player_money.bet_tip))
-  print('あなたの予想: {}'.format(player_money.predict_value))
-  print('='*35)
+  for player_money in players_money:
+    print('[{}]  所持チップ: {}  ベット: {}  予想: {}'.format(player_money.name,player_money.own_tip,player_money.bet_tip,player_money.predict_value))
+  print('='*70)
 
-def view(deck,player,banker,player_money):
-  clear_print_head(player_money)
+def view(deck,player,banker,players_money):
+  clear_print_head(players_money)
   print('山札の残り枚数: {}'.format(str(deck.num)))
   print('{}の手札: {} ({})'.format(player.name,player.show_all(),player.score))
   print('{}の手札: {} ({})'.format(banker.name,banker.show_all(),banker.score))
-  print('='*35)
+  print('='*70)
 
-def input_draw_view(deck,player,banker,player_money,player_draw=True,check_draw=True):
+def input_draw_view(deck,player,banker,players_money,player_draw=True,check_draw=True):
   # playerがカード引く場合はplayer_draw=True．
   # bankerがカード引く場合はplayer_draw=False．
   if player_draw:
     if check_draw:
       input('{}がカードを引きます．(enter)'.format(player.name))
     player.draw(deck)
-    view(deck,player,banker,player_money)
+    view(deck,player,banker,players_money)
   else:
     if check_draw:
       input('{}がカードを引きます．(enter)'.format(banker.name))
     banker.draw(deck)
-    view(deck,player,banker,player_money)
+    view(deck,player,banker,players_money)
 
-def baccarat(player_money,check_draw=True):
-  clear_print_head(player_money)
+def result_view(players_money,clear=True,header=True):
+  if clear:
+    os.system('clear')
+  if header:
+    print('='*70)
+  for player_money in players_money:
+    delta = player_money.own_tip-player_money.initial_tip
+    print('【{}の結果】'.format(player_money.name))
+    print('ゲーム数: {}'.format(str(player_money.game_counter)))
+    print('的中    : {}'.format(str(player_money.hit_counter)))
+    print('外れ    : {}'.format(str(player_money.miss_counter)))
+    print('  最終チップ: {}'.format(str(player_money.own_tip)))
+    print('- 初期チップ: {}'.format(str(player_money.initial_tip)))
+    print('-'*(14+max(len(str(player_money.own_tip)),len(str(player_money.initial_tip)),len(str(abs(delta)))+1)))
+    if delta > 0:
+      sign = '+'
+    elif delta<0:
+      sign = '-'
+    else:
+      sign = '±'
+    print('  収支　　　: {}'.format(sign+str(abs(delta))))
+    print('='*70)
+
+def baccarat(players_money,check_draw=True):
+  clear_print_head(players_money)
   # 予想する
-  print(Baccarat_Money.choice_text)
-  while True:
-    try:
-      player_money.predict(int(input('予想: ')))
-      break
-    except (KeyError,ValueError) :
-      print('1,2,3の中から選択して入力してください．')
-  clear_print_head(player_money)
-  # ベットする
-  while True:
-    try:
-      player_money.bet(float(input('ベット額: ')))
-      break
-    except ValueError:
-      print('数値を入力してください.')
-    except ValueRangeError:
-      print('0より大きくて所持チップ額({})より小さい数値を入力してください．'.format(str(player_money.own_tip)))
+  for player_money in players_money:
+    print(Baccarat_Money.choice_text)
+    while True:
+      try:
+        player_money.predict(int(input('{}の予想: '.format(player_money.name))))
+        break
+      except (KeyError,ValueError) :
+        print('1,2,3の中から選択して入力してください．')
+    clear_print_head(players_money)
+    # ベットする
+    while True:
+      try:
+        player_money.bet(float(input('ベット額: ')))
+        break
+      except ValueError:
+        print('数値を入力してください.')
+      except ValueRangeError:
+        print('0より大きくて所持チップ額({})より小さい数値を入力してください．'.format(str(player_money.own_tip)))
+    clear_print_head(players_money)
   
   # ゲームスタート
   deck = Deck()
   player = Baccarat_Hand('プレイヤー')
   banker = Baccarat_Hand('バンカー')
-  view(deck,player,banker,player_money)
+  view(deck,player,banker,players_money)
   if check_draw:
     input('カードを配ります．(enter)')
   player.draw(deck)
   player.draw(deck)
   banker.draw(deck)
   banker.draw(deck)
-  view(deck,player,banker,player_money)
+  view(deck,player,banker,players_money)
 
   # ナチュラルとそうでない場合で分ける.
   # ナチュラルの場合
@@ -217,21 +242,21 @@ def baccarat(player_money,check_draw=True):
     if player.score>=6:
       # バンカーのターン
       if banker.score<=5:
-        input_draw_view(deck,player,banker,player_money,player_draw=False,check_draw=check_draw)
+        input_draw_view(deck,player,banker,players_money,player_draw=False,check_draw=check_draw)
     # プレイヤーが三枚目を引く条件及びその場合
     else:
-      input_draw_view(deck,player,banker,player_money,player_draw=True,check_draw=check_draw)
+      input_draw_view(deck,player,banker,players_money,player_draw=True,check_draw=check_draw)
       # バンカーのターン
       if banker.score<=2:
-        input_draw_view(deck,player,banker,player_money,player_draw=False,check_draw=check_draw)
+        input_draw_view(deck,player,banker,players_money,player_draw=False,check_draw=check_draw)
       elif banker.score==3 and (0<=player.three<=7 or player.three==9):
-        input_draw_view(deck,player,banker,player_money,player_draw=False,check_draw=check_draw)
+        input_draw_view(deck,player,banker,players_money,player_draw=False,check_draw=check_draw)
       elif banker.score==4 and 2<=player.three<=7:
-        input_draw_view(deck,player,banker,player_money,player_draw=False,check_draw=check_draw)
+        input_draw_view(deck,player,banker,players_money,player_draw=False,check_draw=check_draw)
       elif banker.score==5 and 4<=player.three<=7:
-        input_draw_view(deck,player,banker,player_money,player_draw=False,check_draw=check_draw)
+        input_draw_view(deck,player,banker,players_money,player_draw=False,check_draw=check_draw)
       elif banker.score==6 and 6<=player.three<=7:
-        input_draw_view(deck,player,banker,player_money,player_draw=False,check_draw=check_draw)
+        input_draw_view(deck,player,banker,players_money,player_draw=False,check_draw=check_draw)
 
   # 結果を判定
   if player.score > banker.score:
@@ -244,7 +269,9 @@ def baccarat(player_money,check_draw=True):
     print('引き分けです．')
     result_key = 3
 
-  player_money.result(result_key)
+  # 結果に基づきお金を処理する
+  for player_money in players_money:
+    player_money.result(result_key)
 
 def main():
   import argparse
@@ -255,41 +282,47 @@ def main():
   parser.add_argument("-i", "--initial-tip", metavar="tip", type=float, default=10000, help="初期所持チップ")
   parser.add_argument("-s", "--check-start", action="store_false", help="開始時の確認をしない")
   parser.add_argument("-d", "--check-draw", action="store_false", help="カードを引くときに確認しない")
+  parser.add_argument("-p", "--players", metavar="名前", nargs='*', default=['あなた'], help="名前（敬称含む）")
   options = parser.parse_args()
 
-  player_money = Baccarat_Money(options.initial_tip)
- 
   if options.check_start:
     if not yn_inf('バカラを開始しますか？'):
       sys.exit()
-  
+
+  players_money = []
+  for player in options.players:
+    players_money.append(Baccarat_Money(options.initial_tip,player))
+ 
+  # バカラを無限に行う
+  end_players_money = []
   while True:
     try:
-      baccarat(player_money,options.check_draw)
+      baccarat(players_money,options.check_draw)
     except KeyboardInterrupt:
-      input('\n中断されました．ベットされたチップは返却されます．(enter)')
+      input('\n中断されました．ベットされていたチップは返却されます．(enter)')
       try:
-        player_money.dividend(ratio=1,counter_add=False)
+        players_money.dividend(ratio=1,counter_add=False)
       except TypeError:
         pass
       break
-    if player_money.own_tip == 0:
-      input('ベットすることができなくなったため終了します．(enter)')
+    pop_i_list = []
+    for i,player_money in enumerate(players_money):
+      if player_money.own_tip == 0:
+        input('{}はベットすることができなくなったためゲームから除外されます．(enter)'.format(player_money.name))
+        pop_i_list.append(i)
+    if len(pop_i_list):
+      for i in reversed(pop_i_list):
+        end_players_money.append(players_money.pop(i))
+    if len(players_money)==0:
+      input('参加者がいなくなったためゲームを終了します．(enter)')
       break
     if not yn_inf('継続しますか？'):
       if yn_inf('本当に終了しますか？'):
         break
   
-  delta = player_money.own_tip-player_money.initial_tip
-  os.system('clear')
-  print('【結果】')
-  print('ゲーム数: {}'.format(str(player_money.game_counter)))
-  print('的中    : {}'.format(str(player_money.hit_counter)))
-  print('外れ    : {}'.format(str(player_money.miss_counter)))
-  print('  最終チップ: {}'.format(str(player_money.own_tip)))
-  print('- 初期チップ: {}'.format(str(player_money.initial_tip)))
-  print('-'*(14+max(len(str(player_money.own_tip)),len(str(player_money.initial_tip)),len(str(delta)))))
-  print('  収支　　　: {}'.format(str(delta)))
+  # 最終結果を表示
+  result_view(players_money,clear=True,header=True)
+  result_view(reversed(end_players_money),clear=False,header=False)
 
 if(__name__ == '__main__'):
   main()
