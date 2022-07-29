@@ -10,6 +10,9 @@ import sys
 class ValueRangeError(Exception):
   pass
 
+class NameDifferentError(Exception):
+  pass
+
 class Deck:
   def __init__(self):
     code_all = list(range(52))
@@ -58,7 +61,7 @@ class Card:
       self.show = self.mark+str(self.num)
  
 class Money:
-  def __init__(self,initial_tip):
+  def __init__(self,initial_tip,name='あなた'):
     if initial_tip<=0:
       raise ValueRangeError("'initial_tip' must be greater than 0.")
     self.initial_tip = initial_tip
@@ -67,6 +70,7 @@ class Money:
     self.game_counter = 0
     self.miss_counter = 0
     self.hit_counter = 0
+    self.name = name
   def bet(self,tip):
     if not 0 < tip <= self.own_tip:
       raise ValueRangeError("'tip' must be greater than 0 and less than or equal 'self.tip'.")
@@ -87,20 +91,34 @@ class Baccarat_Predict:
   predict = {1:'プレイヤーの勝利',
 2:'バンカーの勝利',
 3:'引き分け'}
-  def __init__(self):
-    while True:
-      print("""\
+  choice_text ="""\
 【選択肢】
 1: {}(1.95倍)
 2: {}(2倍)
 3: {}(9倍)\
-""".format(__class__.predict[1],__class__.predict[2],__class__.predict[3]))
-      try:
-        self.key = int(input('予想: '))
-        self.value = __class__.predict[self.key]
-        break
-      except (KeyError,ValueError) :
-        print('1,2,3から選択してください.')
+""".format(predict[1],predict[2],predict[3])
+  def __init__(self,predict_key,name='あなた'):
+    self.key = predict_key
+    self.value = __class__.predict[self.key]
+    self.name = name
+  def result(self,result_key,money):
+    if self.name !=money.name:
+      raise NameDifferentError
+    # チップの処理
+    hit_text = '{}の予想は当たったため，'.format(self.name)+'ベットしていたチップは{}倍になって返却されます．'
+    if self.key!=result_key:
+      print('あなたの予想は外れたため，ベットしていたチップは没収されます．')
+      money.dividend() 
+    elif result_key == 1:
+      print(hit_text.format('1.95'))
+      money.dividend(ratio=1.95)
+    elif result_key == 2:
+      print(hit_text.format('2'))
+      money.dividend(ratio=2)
+    elif result_key == 3:
+      print(hit_text.format('9'))
+      money.dividend(ratio=9)
+    print('{}の所持チップ額は{}になります.'.format(self.name,money.own_tip))
 
 def yn_inf(text,sep=' '):
   while True:
@@ -147,7 +165,13 @@ def input_draw_view(deck,player,banker,player_money,predict,player_draw=True,che
 def baccarat(player_money,check_draw=True):
   clear_print_head(player_money)
   # 予想する
-  predict = Baccarat_Predict()
+  while True:
+    try:
+      print(Baccarat_Predict.choice_text)
+      predict = Baccarat_Predict(int(input('予想: ')))
+      break
+    except (KeyError,ValueError) :
+      print('1,2,3の中から選択して入力してください．')
   print('='*35)
   # ベットする
   while True:
@@ -209,21 +233,8 @@ def baccarat(player_money,check_draw=True):
     print('引き分けです．')
     result_key = 3
 
-  # チップの処理
-  hit_text = 'あなたの予想は当たったため，ベットしていたチップは{}倍になって返却されます．'
-  if predict.key!=result_key:
-    print('あなたの予想は外れたため，ベットしていたチップは没収されます．')
-    player_money.dividend() 
-  elif result_key == 1:
-    print(hit_text.format('1.95'))
-    player_money.dividend(ratio=1.95)
-  elif result_key == 2:
-    print(hit_text.format('2'))
-    player_money.dividend(ratio=2)
-  elif result_key == 3:
-    print(hit_text.format('9'))
-    player_money.dividend(ratio=9)
-  print('あなたの所持チップ額は{}になります.'.format(player_money.own_tip))
+  predict.result(result_key,player_money)
+
 
 def main():
   import argparse
