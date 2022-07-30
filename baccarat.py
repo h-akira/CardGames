@@ -8,6 +8,7 @@ import os
 import sys
 from operator import attrgetter
 
+
 class ValueRangeError(Exception):
   pass
 
@@ -158,7 +159,7 @@ class Baccarat_Moneys(Moneys):
   def view(self,clear=True):
     if clear:
       os.system('clear')
-    print('='*70)
+    print('='*line_length)
     for money in self:
       delta = money.own_tip-money.initial_tip
       print('【{}の結果】'.format(money.name))
@@ -175,7 +176,7 @@ class Baccarat_Moneys(Moneys):
       else:
         sign = '±'
       print('  収支　　　: {}'.format(sign+str(abs(delta))))
-      print('='*70)
+      print('='*line_length)
 
 def yn_inf(text,sep=' '):
   while True:
@@ -187,7 +188,7 @@ def yn_inf(text,sep=' '):
 
 def clear_print_head(players_money,game_counter_add=True):
   os.system('clear')
-  print('='*70)
+  print('='*line_length)
   if game_counter_add:
     game_counter = players_money[0].game_counter + 1
   else:
@@ -195,14 +196,14 @@ def clear_print_head(players_money,game_counter_add=True):
   print('【{}ゲーム目】'.format(str(game_counter)))
   for player_money in players_money:
     print('[{}]  所持チップ: {}  ベット: {}  予想: {}'.format(player_money.name,player_money.own_tip,player_money.bet_tip,player_money.predict_value))
-  print('='*70)
+  print('='*line_length)
 
 def view(deck,player,banker,players_money):
   clear_print_head(players_money)
   print('山札の残り枚数: {}'.format(str(deck.num)))
   print('{}の手札: {} ({})'.format(player.name,player.show_all(),player.score))
   print('{}の手札: {} ({})'.format(banker.name,banker.show_all(),banker.score))
-  print('='*70)
+  print('='*line_length)
 
 def input_draw_view(deck,player,banker,players_money,player_draw=True,check_draw=True):
   # playerがカード引く場合はplayer_draw=True．
@@ -304,9 +305,13 @@ def main():
   parser.add_argument("-i", "--initial-tip", metavar="tip", type=float, default=10000, help="初期所持チップ")
   parser.add_argument("-d", "--check-draw", action="store_false", help="カードを引くときに確認しない")
   parser.add_argument("-p", "--players", metavar="名前", nargs='*', default=['あなた'], help="名前（敬称含む）")
+  parser.add_argument("-l", "--line-lengh", metavar="長さ", type=int, default=70, help="画面を区切る線（-）の長さ（個数）")
   parser.add_argument("-s", "--result-sort", action="store_true", help="最終結果を表示するときにソートする")
   options = parser.parse_args()
 
+  global line_length
+  line_length = options.line_lengh
+  
   try:
     if not yn_inf('バカラを開始しますか？'):
       sys.exit()
