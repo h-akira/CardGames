@@ -304,7 +304,7 @@ def main():
   parser.add_argument("-i", "--initial-tip", metavar="tip", type=float, default=10000, help="初期所持チップ")
   parser.add_argument("-d", "--check-draw", action="store_false", help="カードを引くときに確認しない")
   parser.add_argument("-p", "--players", metavar="名前", nargs='*', default=['あなた'], help="名前（敬称含む）")
-  parser.add_argument("--result-sort", action="store_true", help="最終結果を表示するときにソートする")
+  parser.add_argument("-s", "--result-sort", action="store_true", help="最終結果を表示するときにソートする")
   options = parser.parse_args()
 
   try:
