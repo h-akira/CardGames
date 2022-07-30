@@ -88,14 +88,17 @@ class Money:
       else:
         self.bet_tip += tip
   def dividend(self,ratio=0,counter_add=True):
-    self.own_tip += self.bet_tip*ratio
-    self.bet_tip = None
-    if counter_add:
-      self.game_counter += 1
-      if ratio==0:
-        self.miss_counter += 1
-      else:
-        self.hit_counter += 1
+    if self.bet == None:
+      raise TypeError("'self.bet' must be numerical value")
+    else:
+      self.own_tip += self.bet_tip*ratio
+      self.bet_tip = None
+      if counter_add:
+        self.game_counter += 1
+        if ratio==0:
+          self.miss_counter += 1
+        else:
+          self.hit_counter += 1
 
 class Baccarat_Money(Money):
   predict_dic = {1:'プレイヤーの勝利',
@@ -133,12 +136,15 @@ class Baccarat_Money(Money):
     self.predict_value = None
 
 def yn_inf(text,sep=' '):
+  ## try:
   while True:
     ans = input(text+sep+'(y/n): ')
     if ans == 'y':
       return True
     elif ans == 'n':
       return False
+  ## except KeyboardInterrupt:
+    ## sys.exit()
 
 def clear_print_head(players_money,game_counter_add=True):
   os.system('clear')
@@ -173,11 +179,14 @@ def input_draw_view(deck,player,banker,players_money,player_draw=True,check_draw
     banker.draw(deck)
     view(deck,player,banker,players_money)
 
-def result_view(players_money,clear=True,header=True):
+def final_view(players_money,clear=True,header=True,sort=True):
   if clear:
     os.system('clear')
   if header:
     print('='*70)
+  if sort:
+    sorted_players_money = []
+    for i, in sorted[player_money.own_tip for i,player_money in enumerate(players_money)]
   for player_money in players_money:
     delta = player_money.own_tip-player_money.initial_tip
     print('【{}の結果】'.format(player_money.name))
@@ -285,9 +294,13 @@ def main():
   parser.add_argument("-p", "--players", metavar="名前", nargs='*', default=['あなた'], help="名前（敬称含む）")
   options = parser.parse_args()
 
-  if options.check_start:
-    if not yn_inf('バカラを開始しますか？'):
-      sys.exit()
+  try:
+    if options.check_start:
+      if not yn_inf('バカラを開始しますか？'):
+        sys.exit()
+  except KeyboardInterrupt:
+    print('\nバカラを開始せず終了します．')
+    sys.exit()
 
   players_money = []
   for player in options.players:
@@ -298,31 +311,32 @@ def main():
   while True:
     try:
       baccarat(players_money,options.check_draw)
-    except KeyboardInterrupt:
-      input('\n中断されました．ベットされていたチップは返却されます．(enter)')
-      try:
-        players_money.dividend(ratio=1,counter_add=False)
-      except TypeError:
-        pass
-      break
-    pop_i_list = []
-    for i,player_money in enumerate(players_money):
-      if player_money.own_tip == 0:
-        input('{}はベットすることができなくなったためゲームから除外されます．(enter)'.format(player_money.name))
-        pop_i_list.append(i)
-    if len(pop_i_list):
-      for i in reversed(pop_i_list):
-        end_players_money.append(players_money.pop(i))
-    if len(players_money)==0:
-      input('参加者がいなくなったためゲームを終了します．(enter)')
-      break
-    if not yn_inf('継続しますか？'):
-      if yn_inf('本当に終了しますか？'):
+      pop_i_list = [i for i,player_money in enumerate(players_money) if player_money.own_tip == 0]
+      if len(pop_i_list):
+        input('{}はベットすることができなくなったためゲームから除外されます．(enter)'.format('と'.join([players_money[i].name for i in pop_i_list])))
+        for i in reversed(pop_i_list):
+          end_players_money.append(players_money.pop(i))
+      if len(players_money)==0:
+        input('参加者がいなくなったためゲームを終了します．(enter)')
         break
+      if not yn_inf('継続しますか？'):
+        if yn_inf('本当に終了しますか？'):
+          break
+    except KeyboardInterrupt:
+      try:
+        input('\n中断されました．ベットされていたチップは返却されます．(enter)')
+      except KeyboardInterrupt:
+        pass
+      for player_money in players_money:
+        try:
+          player_money.dividend(ratio=1,counter_add=False)
+        except TypeError:
+          pass
+      break
   
   # 最終結果を表示
-  result_view(players_money,clear=True,header=True)
-  result_view(reversed(end_players_money),clear=False,header=False)
+  final_view(players_money,clear=True,header=True)
+  final_view(reversed(end_players_money),clear=False,header=False)
 
 if(__name__ == '__main__'):
   main()
