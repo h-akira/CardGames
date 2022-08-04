@@ -8,7 +8,6 @@ import os
 import sys
 from operator import attrgetter
 
-
 class ValueRangeError(Exception):
   pass
 
@@ -82,7 +81,7 @@ class Money:
     self.name = name
     self.debt = debt
     self.play = play
-  def bet(self,tip,debt=False):
+  def bet(self,tip):
     if not self.debt and not 0 < tip <= self.own_tip:
       raise ValueRangeError("'tip' must be greater than 0 and less than or equal 'self.tip'.")
     else:
@@ -199,7 +198,7 @@ def clear_print_head(moneys,game_counter_add=True):
     game_counter = moneys[0].game_counter
   print('【{}ゲーム目】'.format(str(game_counter)))
   for money in moneys:
-    print('[{}]  所持チップ: {}  ベット: {}  予想: {}'.format(money.name,money.own_tip,money.bet_tip,money.predict_value))
+    print('[{}] 所持チップ: {} ベット: {} 予想: {}'.format(money.name,money.own_tip,money.bet_tip,money.predict_value))
   print('='*line_length)
 
 def view(deck,player,banker,moneys,game_counter_add=True):
@@ -310,7 +309,7 @@ def main():
   parser.add_argument("--version", action="version", version='%(prog)s 0.0.2')
   parser.add_argument("-i", "--initial-tip", metavar="tip", type=float, default=10000, help="初期所持チップ")
   parser.add_argument("-d", "--check-draw", action="store_false", help="カードを引くときに確認しない")
-  parser.add_argument("-p", "--players", metavar="名前", nargs='*', default=['あなた'], help="名前（敬称含む）")
+  parser.add_argument("-p", "--players", metavar="名前", nargs='*', default=['あなた'], help="参加者の名前（何人でも）")
   parser.add_argument("-l", "--line-lengh", metavar="長さ", type=int, default=70, help="画面を区切る線（-）の長さ（個数）")
   parser.add_argument("-s", "--result-sort", action="store_true", help="最終結果を表示するときにソートする")
   options = parser.parse_args()
