@@ -305,7 +305,7 @@ def main():
   import argparse
   parser = argparse.ArgumentParser(description="""\
 バカラを行う．
-""")
+""", formatter_class = argparse.ArgumentDefaultsHelpFormatter)
   parser.add_argument("--version", action="version", version='%(prog)s 0.0.2')
   parser.add_argument("-i", "--initial-tip", metavar="tip", type=float, default=10000, help="初期所持チップ")
   parser.add_argument("-d", "--check-draw", action="store_false", help="カードを引くときに確認しない")
